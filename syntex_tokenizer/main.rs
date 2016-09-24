@@ -20,7 +20,7 @@ fn tokenize_rustc(input: &str) -> Option<Vec<rustlexspec::Token>> {
     }
     result.push(rustlexspec::Token {
         token_type: by_name("whitespace"),
-        span: (0, 1),
+        len: 1,
     });
 
     return Some(result);
@@ -33,31 +33,57 @@ fn tokenize_rustc(input: &str) -> Option<Vec<rustlexspec::Token>> {
         use syntex_syntax::parse::token::Token::*;
         use syntex_syntax::parse::token::DelimToken::*;
         use syntex_syntax::parse::token::BinOpToken::*;
+        use syntex_syntax::parse::token::Lit;
         let token_name = match t.tok {
-            Pound => "#",
-            Ident(..) => "identifier",
-            Lifetime(..) => "lifetime",
-            Whitespace => "whitespace",
-            Semi => ";",
+            AndAnd => "&&",
+            BinOp(And) => "&",
+            BinOp(Minus) => "-",
+            BinOp(Or) => "|",
+            BinOp(Plus) => "+",
+            BinOp(Shl) => "<<",
+            BinOp(Shr) => ">>",
+            BinOpEq(Minus) => "-=",
+            BinOpEq(Plus) => "+=",
+            CloseDelim(Brace) => "}",
+            CloseDelim(Bracket) => "]",
+            CloseDelim(Paren) => ")",
             Colon => ":",
             Comma => ",",
             Comment => "line_comment",
-            Lt => "<",
+            Dot => ".",
+            DotDot => "..",
+            DotDotDot => "...",
+            Eq => "=",
+            EqEq => "==",
+            FatArrow => "=>",
             Gt => ">",
-            OpenDelim(Paren) => "(",
-            CloseDelim(Paren) => ")",
-            OpenDelim(Bracket) => "[",
-            CloseDelim(Bracket) => "]",
-            OpenDelim(Brace) => "{",
-            CloseDelim(Brace) => "}",
-            BinOp(And) => "&&",
-            BinOp(Or) => "||",
+            Ident(..) => "identifier",
+            Le => "<=",
+            Lifetime(..) => "lifetime",
+            Literal(Lit::Char(_), _) => "char",
+            Literal(Lit::Integer(_), _) => "integer",
+            Literal(Lit::StrRaw(_, _), _) => "raw_string",
+            Literal(Lit::Str_(_), _) => "string",
+            Lt => "<",
             ModSep => "::",
+            Ne => "!=",
+            Not => "!",
+            OpenDelim(Brace) => "{",
+            OpenDelim(Bracket) => "[",
+            OpenDelim(Paren) => "(",
+            OrOr => "||",
+            Pound => "#",
+            RArrow => "->",
+            Semi => ";",
+            Underscore => "_",
+            Whitespace => "whitespace",
             _ => panic!("Unhandled token {:?}", t.tok)
         };
+//        use ::std::io::Write;
+//        writeln!(::std::io::stderr(), "token_name = {:?}", token_name);
         rustlexspec::Token {
             token_type: by_name(token_name),
-            span: (t.sp.lo.0 as usize, t.sp.hi.0 as usize),
+            len: t.sp.hi.0 as usize - t.sp.lo.0 as usize,
         }
     }
 }
