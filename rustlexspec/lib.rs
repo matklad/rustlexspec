@@ -63,7 +63,7 @@ pub fn tokenize(input: &str) -> Option<Vec<Token>> {
         // `first_token` algorithm.
         let token = match first_token(remaining) {
             Some((t, l)) => {
-                assert!(l > 0);
+                assert!(l > 0, "{}", t.name());
                 Token { token_type: t, len: l }
             },
             // 4. If this fails, report error.
@@ -96,7 +96,7 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
     lazy_static! {
         static ref PATTERNS: Vec<Regex> =
             TOKEN_TYPES.iter()
-            .map(|t| Regex::new(&format!("^{}", t.re())).unwrap())
+            .map(|t| Regex::new(&format!("^({})", t.re())).unwrap())
             .collect();
     }
 
@@ -144,7 +144,7 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
 }
 
 
-pub static TOKEN_TYPES: [TokenType; 44] = [
+pub static TOKEN_TYPES: [TokenType; 48] = [
     TokenType("identifier", r"(_|\p{XID_Start})\p{XID_Continue}*", None),
     TokenType("_", r"_", None),
     TokenType("lifetime", r"'\p{XID_Continue}+", None),
@@ -161,6 +161,9 @@ pub static TOKEN_TYPES: [TokenType; 44] = [
     TokenType("(", r"\(", None),
     TokenType(")", r"\)", None),
     TokenType("*", r"\*", None),
+    TokenType("/", r"/", None),
+    TokenType("%", r"%", None),
+    TokenType("^", r"\^", None),
     TokenType("+", r"\+", None),
     TokenType("+=", r"\+=", None),
     TokenType(",", r",", None),
@@ -192,7 +195,8 @@ pub static TOKEN_TYPES: [TokenType; 44] = [
     TokenType("char", r"'.'", None),
     TokenType("raw_string", r##"r#*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
     TokenType("string", r#""[^"]*""#, None),
-    TokenType("integer", r"\d+", None),
+    TokenType("integer", r"\d+(\p{XID_Start}\p{XID_Continue}*)?", None),
+    TokenType("float", r"((\d+\.\d+([eE][+-]?\d+)?)|(\d+([eE][+-]?\d+)))(\p{XID_Start}\p{XID_Continue}*)?", None),
 ];
 
 
@@ -265,7 +269,9 @@ pub fn driver<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
     io::stdin().read_to_string(&mut buffer).expect("Failed to read stdin");
     let tokens = f(&buffer).expect("Invalid rust file");
 
+    let mut offset = 0;
     for token in tokens.iter() {
-        println!("{} {}", token.token_type.name(), token.len);
+        println!("{} {} {:?}", token.token_type.name(), token.len, &buffer[offset..offset + token.len]);
+        offset += token.len;
     }
 }

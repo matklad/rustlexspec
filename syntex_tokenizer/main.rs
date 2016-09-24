@@ -26,7 +26,8 @@ fn tokenize_rustc(input: &str) -> Option<Vec<rustlexspec::Token>> {
     return Some(result);
 
     fn by_name(name: &str) -> rustlexspec::TokenType {
-        *rustlexspec::TOKEN_TYPES.iter().find(|t| t.name() == name).unwrap()
+        *rustlexspec::TOKEN_TYPES.iter().find(|t| t.name() == name)
+            .expect(&format!("No `{}` token", name))
     }
 
     fn map_token(t: TokenAndSpan) -> rustlexspec::Token {
@@ -43,6 +44,9 @@ fn tokenize_rustc(input: &str) -> Option<Vec<rustlexspec::Token>> {
             BinOp(Shl) => "<<",
             BinOp(Shr) => ">>",
             BinOp(Star) => "*",
+            BinOp(Slash) => "/",
+            BinOp(Percent) => "%",
+            BinOp(Caret) => "^",
             BinOpEq(Minus) => "-=",
             BinOpEq(Plus) => "+=",
             CloseDelim(Brace) => "}",
@@ -65,7 +69,9 @@ fn tokenize_rustc(input: &str) -> Option<Vec<rustlexspec::Token>> {
             Literal(Lit::Integer(_), _) => "integer",
             Literal(Lit::StrRaw(_, _), _) => "raw_string",
             Literal(Lit::Str_(_), _) => "string",
+            Literal(Lit::Float(_), _) => "float",
             Lt => "<",
+            Ge => ">=",
             ModSep => "::",
             Ne => "!=",
             Not => "!",
@@ -80,8 +86,6 @@ fn tokenize_rustc(input: &str) -> Option<Vec<rustlexspec::Token>> {
             Whitespace => "whitespace",
             _ => panic!("Unhandled token {:?}", t.tok)
         };
-//        use ::std::io::Write;
-//        writeln!(::std::io::stderr(), "token_name = {:?}", token_name);
         rustlexspec::Token {
             token_type: by_name(token_name),
             len: t.sp.hi.0 as usize - t.sp.lo.0 as usize,
