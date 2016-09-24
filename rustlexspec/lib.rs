@@ -144,7 +144,7 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
 }
 
 
-pub static TOKEN_TYPES: [TokenType; 42] = [
+pub static TOKEN_TYPES: [TokenType; 44] = [
     TokenType("identifier", r"(_|\p{XID_Start})\p{XID_Continue}*", None),
     TokenType("_", r"_", None),
     TokenType("lifetime", r"'\p{XID_Continue}+", None),
@@ -160,9 +160,11 @@ pub static TOKEN_TYPES: [TokenType; 42] = [
     TokenType("&&", r"&&", None),
     TokenType("(", r"\(", None),
     TokenType(")", r"\)", None),
+    TokenType("*", r"\*", None),
     TokenType("+", r"\+", None),
     TokenType("+=", r"\+=", None),
     TokenType(",", r",", None),
+    TokenType("-", r"-", None),
     TokenType("-=", r"-=", None),
     TokenType("->", r"->", None),
     TokenType(".", r"\.", None),

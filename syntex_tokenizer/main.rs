@@ -42,6 +42,7 @@ fn tokenize_rustc(input: &str) -> Option<Vec<rustlexspec::Token>> {
             BinOp(Plus) => "+",
             BinOp(Shl) => "<<",
             BinOp(Shr) => ">>",
+            BinOp(Star) => "*",
             BinOpEq(Minus) => "-=",
             BinOpEq(Plus) => "+=",
             CloseDelim(Brace) => "}",
