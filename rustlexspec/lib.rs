@@ -193,33 +193,38 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
 }
 
 
-static TOKEN_TYPES: [TokenType; 50] = [
+pub static TOKEN_TYPES: [TokenType; 36] = [
     TokenType("identifier", r"(_|\p{XID_Start})\p{XID_Continue}*", None),
+    TokenType("_", r"_", None),
     TokenType("lifetime", r"'\p{XID_Continue}+", None),
 
-    TokenType("as", r"as", None),
-    TokenType("crate", r"crate", None),
-    TokenType("else", r"else", None),
-    TokenType("extern", r"extern", None),
-    TokenType("fn", r"fn", None),
-    TokenType("for", r"for", None),
-    TokenType("if", r"if", None),
-    TokenType("impl", r"impl", None),
-    TokenType("in", r"in", None),
-    TokenType("let", r"let", None),
-    TokenType("match", r"match", None),
-    TokenType("mut", r"mut", None),
-    TokenType("pub", r"pub", None),
-    TokenType("self", r"self", None),
-    TokenType("static", r"static", None),
-    TokenType("struct", r"struct", None),
-    TokenType("use", r"use", None),
+//    TokenType("as", r"as", None),
+//    TokenType("crate", r"crate", None),
+//    TokenType("else", r"else", None),
+//    TokenType("extern", r"extern", None),
+//    TokenType("fn", r"fn", None),
+//    TokenType("for", r"for", None),
+//    TokenType("if", r"if", None),
+//    TokenType("impl", r"impl", None),
+//    TokenType("in", r"in", None),
+//    TokenType("let", r"let", None),
+//    TokenType("match", r"match", None),
+//    TokenType("mut", r"mut", None),
+//    TokenType("pub", r"pub", None),
+//    TokenType("ref", r"ref", None),
+//    TokenType("return", r"return", None),
+//    TokenType("self", r"self", None),
+//    TokenType("static", r"static", None),
+//    TokenType("struct", r"struct", None),
+//    TokenType("use", r"use", None),
+//    TokenType("while", r"while", None),
 
     TokenType("block_comment", r"/\*", Some(&(block_comment_rule as fn(&str) -> Option<usize>))),
     TokenType("line_comment", r"//.*", None),
     TokenType("whitespace", r"\s+", None),
 
     TokenType("!", r"!", None),
+    TokenType("!=", r"!=", None),
     TokenType("#", r"#", None),
     TokenType("&", r"&", None),
     TokenType("(", r"\(", None),
@@ -228,6 +233,7 @@ static TOKEN_TYPES: [TokenType; 50] = [
     TokenType("+=", r"\+=", None),
     TokenType(",", r",", None),
     TokenType("-=", r"-=", None),
+    TokenType("->", r"->", None),
     TokenType(".", r"\.", None),
     TokenType("..", r"\.\.", None),
     TokenType(":", r":", None),
@@ -235,8 +241,8 @@ static TOKEN_TYPES: [TokenType; 50] = [
     TokenType(";", r";", None),
     TokenType("<", r"<", None),
     TokenType("=", r"=", None),
+    TokenType("==", r"==", None),
     TokenType("=>", r"=>", None),
-    TokenType(">", r"->", None),
     TokenType(">", r">", None),
     TokenType("[", r"\[", None),
     TokenType("]", r"\]", None),
@@ -310,5 +316,20 @@ fn raw_string_rule(mut input: &str) -> Option<usize> {
 
     fn count_leading_hashes(s: &str) -> usize {
         s.chars().take_while(|&c| c == '#').count()
+    }
+}
+
+
+pub fn driver<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
+    use std::io::{self, Read};
+
+    let mut buffer = String::new();
+    io::stdin().read_to_string(&mut buffer).expect("Failed to read stdin");
+    let tokens = f(&buffer).expect("Invalid rust file");
+
+    for token in tokens.iter() {
+        println!("{} {}",
+                 token.token_type.name(),
+                 token.span.1 - token.span.0);
     }
 }

@@ -1,0 +1,12 @@
+[package]
+name = "syntex_tokenizer"
+version = "0.1.0"
+authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
+
+[dependencies]
+syntex_syntax = "0.43.0"
+rustlexspec = { path = "../rustlexspec" }
+
+[[bin]]
+path = "main.rs"
+name = "syntex-tokenizer"

@@ -1,8 +1,5 @@
-[package]
-name = "rustlexspec"
-version = "0.1.0"
-authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
-
-[dependencies]
-regex = "*"
-lazy_static = "*"
+[workspace]
+members = [
+    "rustlexspec",
+    "syntex_tokenizer",
+]

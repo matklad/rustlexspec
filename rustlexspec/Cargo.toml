@@ -1,0 +1,15 @@
+[package]
+name = "rustlexspec"
+version = "0.1.0"
+authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
+
+[dependencies]
+regex = "*"
+lazy_static = "*"
+
+[lib]
+path = "lib.rs"
+
+[[bin]]
+name = "rustlexspec-tokenizer"
+path = "main.rs"
