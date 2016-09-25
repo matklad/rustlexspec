@@ -11,9 +11,16 @@ extern crate regex;
 
 // Each token consists of a type and a positive length in bytes.
 
+#[derive(Clone, Copy)]
 pub struct Token {
     pub token_type: TokenType,
     pub len: usize,
+}
+
+impl ::std::fmt::Debug for Token {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        self.token_type.name().fmt(f)
+    }
 }
 
 // The total length of all tokens in the sequence produced by

@@ -7,6 +7,9 @@ authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
 syntex_syntax = "0.43.0"
 rustlexspec = { path = "../rustlexspec" }
 
+[lib]
+path = "lib.rs"
+
 [[bin]]
 path = "main.rs"
 name = "syntex-tokenizer"
