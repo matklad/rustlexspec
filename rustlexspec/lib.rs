@@ -144,13 +144,14 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
 }
 
 
-pub static TOKEN_TYPES: [TokenType; 48] = [
+pub static TOKEN_TYPES: [TokenType; 49] = [
     TokenType("identifier", r"(_|\p{XID_Start})\p{XID_Continue}*", None),
     TokenType("_", r"_", None),
     TokenType("lifetime", r"'\p{XID_Continue}+", None),
 
     TokenType("block_comment", r"/\*", Some(&(block_comment_rule as fn(&str) -> Option<usize>))),
-    TokenType("line_comment", r"//.*", None),
+    TokenType("line_comment", r"//([^/\n].*)?", None),
+    TokenType("doc_comment", r"///.*", None),
     TokenType("whitespace", r"\s+", None),
 
     TokenType("!", r"!", None),
@@ -192,7 +193,7 @@ pub static TOKEN_TYPES: [TokenType; 48] = [
     TokenType("}", r"\}", None),
 
     // FIXME
-    TokenType("char", r"'.'", None),
+    TokenType("char", r"'([^\\'\r\n]|\\[^\r\n]|\\x[a-fA-F0-9]+|\\u\{[a-fA-F0-9]*\}?)'", None),
     TokenType("raw_string", r##"r#*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
     TokenType("string", r#""[^"]*""#, None),
     TokenType("integer", r"\d+(\p{XID_Start}\p{XID_Continue}*)?", None),

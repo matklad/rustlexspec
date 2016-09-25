@@ -55,6 +55,7 @@ fn tokenize_rustc(input: &str) -> Option<Vec<rustlexspec::Token>> {
             Colon => ":",
             Comma => ",",
             Comment => "line_comment",
+            DocComment(..) => "doc_comment",
             Dot => ".",
             DotDot => "..",
             DotDotDot => "...",
