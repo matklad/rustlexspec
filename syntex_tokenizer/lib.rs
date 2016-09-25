@@ -52,7 +52,7 @@ pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
             CloseDelim(Paren) => ")",
             Colon => ":",
             Comma => ",",
-            Comment => "line_comment",
+            Comment => "comment",
             DocComment(..) => "doc_comment",
             Dot => ".",
             DotDot => "..",
@@ -92,3 +92,8 @@ pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
     }
 }
 
+#[test]
+fn check() {
+    println!("Here");
+    rustlexspec::check(tokenize)
+}

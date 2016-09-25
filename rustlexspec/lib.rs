@@ -151,16 +151,18 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
 }
 
 
-pub static TOKEN_TYPES: [TokenType; 49] = [
+pub static TOKEN_TYPES: [TokenType; 51] = [
     TokenType("identifier", r"(_|\p{XID_Start})\p{XID_Continue}*", None),
     TokenType("_", r"_", None),
+
+    TokenType("comment", r"//([^/!\n].*)?", None),
+    TokenType("comment", r"/\*[^*!]", Some(&(block_comment_rule as fn(&str) -> Option<usize>))),
+    TokenType("doc_comment",  r"///.*", None),
+    TokenType("doc_comment",  r"//!.*", None),
+    TokenType("doc_comment", r"/\*[*!]", Some(&(block_comment_rule as fn(&str) -> Option<usize>))),
+
     TokenType("lifetime", r"'\p{XID_Continue}+", None),
-
-    TokenType("block_comment", r"/\*", Some(&(block_comment_rule as fn(&str) -> Option<usize>))),
-    TokenType("line_comment", r"//([^/\n].*)?", None),
-    TokenType("doc_comment", r"///.*", None),
     TokenType("whitespace", r"\s+", None),
-
     TokenType("!", r"!", None),
     TokenType("!=", r"!=", None),
     TokenType("#", r"#", None),
@@ -198,7 +200,6 @@ pub static TOKEN_TYPES: [TokenType; 49] = [
     TokenType("|", r"\|", None),
     TokenType("||", r"\|\|", None),
     TokenType("}", r"\}", None),
-
     // FIXME
     TokenType("char", r"'([^\\'\r\n]|\\[^\r\n]|\\x[a-fA-F0-9]+|\\u\{[a-fA-F0-9]*\}?)'", None),
     TokenType("raw_string", r##"r#*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
@@ -257,7 +258,7 @@ fn raw_string_rule(mut input: &str) -> Option<usize> {
     while let Some(c) = input.chars().next() {
         input = &input[c.len_utf8()..];
         length += c.len_utf8();
-        if c == '"' &&  n_hashes <= count_leading_hashes(input) {
+        if c == '"' && n_hashes <= count_leading_hashes(input) {
             return Some(length + n_hashes);
         }
     }
@@ -269,7 +270,7 @@ fn raw_string_rule(mut input: &str) -> Option<usize> {
     }
 }
 
-
+// Command line interface
 pub fn driver<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
     use std::io::{self, Read};
 
@@ -283,3 +284,73 @@ pub fn driver<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
         offset += token.len;
     }
 }
+
+// Tests
+pub fn check<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
+    let text = "
+abstract	alignof	as	become	box
+break	const	continue	crate	do
+else	enum	extern	false	final
+fn	for	if	impl	in
+let	loop	macro	match	mod
+move	mut	offsetof	override	priv
+proc	pub	pure	ref	return
+Self	self	sizeof	static	struct
+super	trait	true	type	typeof
+unsafe	unsized	use	virtual	where
+while	yield
+
+abstractx	alignofx	axs	becomex	boxx
+break92	const92	continue92	crate92	do92
+else92	enum92	extern92	false92	final92
+fn92	for92	if92	impl92	in92
+let92	loop92	macro92	match92	mod92
+move__	mut__	offsetof__	override__	priv__
+proc__	pub__	pure__	ref__	return__
+Self__	self__	sizeof__	static__	struct__
+super__	trait__	true__	type__	typeof__
+unsafe__	unsized__	use__	virtual__	where__
+while__	yield__
+
+_ __ ___ _привет_мир_
+
+//comment
+// comment
+//
+// comment // comment
+/* comment */ non_comment
+
+/* nested
+   /* multi line */
+comment */
+
+/* nested // line comment */
+
+/// line doc comment\
+/// another line
+//! inner
+/** block /* outter*/ */
+/*! block /* inner */ */
+";
+
+    println!("there");
+    let expected = tokenize(text).unwrap();
+    let actual = f(text).expect(&format!(
+        "Failed to parse `{}`", text
+    ));
+
+    let mut o = 0;
+    for (&e, &a) in expected.iter().zip(actual.iter()) {
+        let ename = e.token_type.name();
+        let aname = a.token_type.name();
+        if ename != aname || e.len != a.len {
+            panic!("\nExpected: {} {:?}\n\
+                      Actual  : {} {:?}\n",
+                    ename, &text[o..o+e.len],
+                    aname, &text[o..o+a.len]);
+        }
+        o += e.len;
+    }
+    assert_eq!(actual.len(), expected.len());
+}
+
