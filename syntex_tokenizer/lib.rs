@@ -94,6 +94,5 @@ pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
 
 #[test]
 fn check() {
-    println!("Here");
     rustlexspec::check(tokenize)
 }

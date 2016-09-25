@@ -201,9 +201,9 @@ pub static TOKEN_TYPES: [TokenType; 51] = [
     TokenType("||", r"\|\|", None),
     TokenType("}", r"\}", None),
     // FIXME
-    TokenType("char", r"'([^\\'\r\n]|\\[^\r\n]|\\x[a-fA-F0-9]+|\\u\{[a-fA-F0-9]*\}?)'", None),
+    TokenType("char", r"'([^\\'\r\n]|\\([^\r\n]|x[a-fA-F0-9]+|u\{[a-fA-F0-9]*\}))'", None),
     TokenType("raw_string", r##"r#*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
-    TokenType("string", r#""[^"]*""#, None),
+    TokenType("string", r#""([^"\\]|\\["\\rntxu])*""#, None),
     TokenType("integer", r"\d+(\p{XID_Start}\p{XID_Continue}*)?", None),
     TokenType("float", r"((\d+\.\d+([eE][+-]?\d+)?)|(\d+([eE][+-]?\d+)))(\p{XID_Start}\p{XID_Continue}*)?", None),
 ];
@@ -287,7 +287,7 @@ pub fn driver<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
 
 // Tests
 pub fn check<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
-    let text = "
+    let text = r###"
 abstract	alignof	as	become	box
 break	const	continue	crate	do
 else	enum	extern	false	final
@@ -326,14 +326,25 @@ comment */
 
 /* nested // line comment */
 
-/// line doc comment\
+/// line doc comment
 /// another line
 //! inner
 /** block /* outter*/ */
 /*! block /* inner */ */
-";
 
-    println!("there");
+'x'
+'\'' '\x20' '\u{007D}' '\n' '\r' '\t' '\0' '\u{A}' '\u{000aAa}'
+
+"" "x" "hello" "\"world\""
+// "\"" "\x20" "\u{007D}" "\n" "\r" "\t" "\0" "\u{A}" "\u{AAAaaa}"
+
+// "multi
+// line"
+
+// " with \
+//  escape"
+"###;
+
     let expected = tokenize(text).unwrap();
     let actual = f(text).expect(&format!(
         "Failed to parse `{}`", text
