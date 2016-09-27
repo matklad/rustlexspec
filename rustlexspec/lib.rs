@@ -103,7 +103,7 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
     lazy_static! {
         static ref PATTERNS: Vec<Regex> =
             TOKEN_TYPES.iter()
-            .map(|t| Regex::new(&format!("^({})", t.re())).unwrap())
+            .map(|t| Regex::new(&format!("^((?x){})", t.re())).unwrap())
             .collect();
     }
 
@@ -165,7 +165,7 @@ pub static TOKEN_TYPES: [TokenType; 51] = [
     TokenType("whitespace", r"\s+", None),
     TokenType("!", r"!", None),
     TokenType("!=", r"!=", None),
-    TokenType("#", r"#", None),
+    TokenType("#", r"\x23", None),
     TokenType("&", r"&", None),
     TokenType("&&", r"&&", None),
     TokenType("(", r"\(", None),
@@ -202,7 +202,7 @@ pub static TOKEN_TYPES: [TokenType; 51] = [
     TokenType("}", r"\}", None),
     // FIXME
     TokenType("char", r"'([^\\'\r\n]|\\([^\r\n]|x[a-fA-F0-9]+|u\{[a-fA-F0-9]*\}))'", None),
-    TokenType("raw_string", r##"r#*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
+    TokenType("raw_string", r##"r\x23*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
     TokenType("string", r#""([^"\\]|\\["\\rntxu])*""#, None),
     TokenType("integer", r"\d+(\p{XID_Start}\p{XID_Continue}*)?", None),
     TokenType("float", r"((\d+\.\d+([eE][+-]?\d+)?)|(\d+([eE][+-]?\d+)))(\p{XID_Start}\p{XID_Continue}*)?", None),
