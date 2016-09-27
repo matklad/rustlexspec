@@ -17,6 +17,7 @@ pub struct Token {
     pub len: usize,
 }
 
+
 impl ::std::fmt::Debug for Token {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         self.token_type.name().fmt(f)
@@ -36,6 +37,7 @@ pub struct TokenType(
     &'static str,
     Option<&'static fn(&str) -> Option<usize>>,
 );
+
 
 impl TokenType {
     pub fn name(&self) -> &str { self.0 }
@@ -122,12 +124,12 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
 
     // 2. Find the longest match.
     let (token_type, length) =
-        match matches.iter().max_by_key(|&&(_, length)| length) {
-            Some(&(token_type, length)) => (token_type, length),
-            // 3. If none of the patterns matched, report
-            // error.
-            None => return None,
-        };
+    match matches.iter().max_by_key(|&&(_, length)| length) {
+        Some(&(token_type, length)) => (token_type, length),
+        // 3. If none of the patterns matched, report
+        // error.
+        None => return None,
+    };
 
     // It is guaranteed that the longest march is unique,
     // unless it is a clash between a keyword and an
@@ -151,16 +153,14 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
 }
 
 
-pub static TOKEN_TYPES: [TokenType; 51] = [
+pub static TOKEN_TYPES: &'static [TokenType] = &[
     TokenType("identifier", r"(_|\p{XID_Start})\p{XID_Continue}*", None),
     TokenType("_", r"_", None),
-
     TokenType("comment", r"//([^/!\n].*)?", None),
     TokenType("comment", r"/\*[^*!]", Some(&(block_comment_rule as fn(&str) -> Option<usize>))),
     TokenType("doc_comment", r"///.*", None),
     TokenType("doc_comment", r"//!.*", None),
     TokenType("doc_comment", r"/\*[*!]", Some(&(block_comment_rule as fn(&str) -> Option<usize>))),
-
     TokenType("lifetime", r"'\p{XID_Continue}+", None),
     TokenType("whitespace", r"\s+", None),
     TokenType("!", r"!", None),
@@ -200,18 +200,28 @@ pub static TOKEN_TYPES: [TokenType; 51] = [
     TokenType("|", r"\|", None),
     TokenType("||", r"\|\|", None),
     TokenType("}", r"\}", None),
-
     TokenType("char", r"
         '
         ( \\' | [^'[:space:]] )*
         '
     ", None),
-    TokenType("raw_string", r##"r\x23*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
+    TokenType("byte", r"
+        b'
+        ( \\' | [^'[:space:]] )*
+        '
+    ", None),
     TokenType("string", r#"
         "
-        ( \\" | [^"] )*
+        ( \\(.|\n) | [^"\\] )*
         "
     "#, None),
+    TokenType("raw_string", r##"r\x23*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
+    TokenType("byte_string", r#"
+        b"
+        ( \\(.|\n) | [^"\\] )*
+        "
+    "#, None),
+    TokenType("raw_byte_string", r##"br\x23*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
     TokenType("integer", r"\d+ (\p{XID_Start}\p{XID_Continue}*)?", None),
     TokenType("float", r"
          \d+ ( \.\d+([eE][+-]?\d+)?
@@ -257,9 +267,14 @@ fn block_comment_rule(mut input: &str) -> Option<usize> {
 // except the `#` followed by n hashes. This language is not
 // context free.
 fn raw_string_rule(mut input: &str) -> Option<usize> {
-    assert!(input.starts_with("r"));
-    let mut length = 1;
-    input = &input[1..];
+    let mut length = if input.starts_with("r") {
+        1
+    } else {
+        assert!(input.starts_with("br"));
+        2
+    };
+
+    input = &input[length..];
     let n_hashes = count_leading_hashes(input);
     length += n_hashes;
     input = &input[n_hashes..];
@@ -346,16 +361,21 @@ comment */
 /*! block /* inner */ */
 
 'x' 'lifetime
-'\'' '\x20' '\u{007D}' '\n' '\r' '\t' '\0' '\u{a}' //'\u{000aAa}'
+'\'' '\\' '\x20' '\u{007D}' '\n' '\r' '\t' '\0' '\u{a}' '\u{000aAa}'
 
 "" "x" "hello" "\"world\""
-"\"" "\x20" "\u{007D}" "\n" "\r" "\t" "\0" "\u{A}" "\u{0a0abc}"
+"\"" "\\" "\x20" "\u{007D}" "\n" "\r" "\t" "\0" "\u{A}" "\u{0a0abc}"
 
 "multi
 line"
 
 " with \
  escape"
+
+b'\0' b'x' b'\x7F' b'\\' b'\''
+
+b"x" b"\0" b"\x7F" b"\\" b"Hello WOrld" b"\"\"\""
+br##"hello "# World!"##
 "###;
 
     let expected = tokenize(text).expect("Failed to parse canonically");
