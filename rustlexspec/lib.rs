@@ -138,7 +138,7 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
         .iter()
         .filter(|&&(t, l)| l == length && t.name() != "identifier")
         .count();
-    assert!(ambigious_matches <= 1);
+    assert!(ambigious_matches <= 1, "ambiguity: {:?}", &input[..20]);
 
     // 4. If there is a special rule associated with a
     // token, use it to determine the token's span.
@@ -148,7 +148,6 @@ fn first_token(input: &str) -> Option<(TokenType, usize)> {
             None => None,
         }
     }
-
     return Some((token_type, length))
 }
 
@@ -202,12 +201,12 @@ pub static TOKEN_TYPES: &'static [TokenType] = &[
     TokenType("}", r"\}", None),
     TokenType("char", r"
         '
-        ( \\' | [^'[:space:]] )*
+        (\x20 | ( \\' | [^'[:space:]] )*)
         '
     ", None),
     TokenType("byte", r"
         b'
-        ( \\' | [^'[:space:]] )*
+        (\x20 | ( \\' | [^'[:space:]] )*)
         '
     ", None),
     TokenType("string", r#"
@@ -361,9 +360,9 @@ comment */
 /*! block /* inner */ */
 
 'x' 'lifetime
-'\'' '\\' '\x20' '\u{007D}' '\n' '\r' '\t' '\0' '\u{a}' '\u{000aAa}'
+'\'' ' ' '\t' '\\' '\x20' '\u{007D}' '\n' '\r' '\t' '\0' '\u{a}' '\u{000aAa}'
 
-"" "x" "hello" "\"world\""
+"" "x" " " "	" "hello" "\"world\""
 "\"" "\\" "\x20" "\u{007D}" "\n" "\r" "\t" "\0" "\u{A}" "\u{0a0abc}"
 
 "multi
@@ -372,9 +371,9 @@ line"
 " with \
  escape"
 
-b'\0' b'x' b'\x7F' b'\\' b'\''
+b'x' b' ' b'\t' b'\0' b'\x7F' b'\\' b'\''
 
-b"x" b"\0" b"\x7F" b"\\" b"Hello WOrld" b"\"\"\""
+b"x" b" " b"\0" b"\x7F" b"\\" b"Hello WOrld" b"\"\"\""
 br##"hello "# World!"##
 "###;
 
