@@ -1,11 +1,12 @@
 extern crate syntex_syntax;
 extern crate rustlexspec;
 
+
 use syntex_syntax::parse::{lexer, ParseSess};
 use syntex_syntax::parse::lexer::{Reader, TokenAndSpan};
 
-pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
 
+pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
     let sess = ParseSess::new();
     let file_map = sess.codemap().new_filemap("dummy.rs".to_string(), None, input.to_string());
     let handler = sess.span_diagnostic;
@@ -32,7 +33,6 @@ pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
         use syntex_syntax::parse::token::Token::*;
         use syntex_syntax::parse::token::DelimToken::*;
         use syntex_syntax::parse::token::BinOpToken::*;
-        use syntex_syntax::parse::token::Lit;
         let token_name = match t.tok {
             AndAnd => "&&",
             BinOp(And) => "&",
@@ -64,11 +64,19 @@ pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
             Ident(..) => "identifier",
             Le => "<=",
             Lifetime(..) => "lifetime",
-            Literal(Lit::Char(_), _) => "char",
-            Literal(Lit::Integer(_), _) => "integer",
-            Literal(Lit::StrRaw(_, _), _) => "raw_string",
-            Literal(Lit::Str_(_), _) => "string",
-            Literal(Lit::Float(_), _) => "float",
+            Literal(lit, _) => {
+                use syntex_syntax::parse::token::Lit::*;
+                match lit {
+                    Char(_) => "char",
+                    Byte(_) => "byte",
+                    ByteStr(_) => "byte_string",
+                    ByteStrRaw(_, _) => "raw_byte_string",
+                    Integer(_) => "integer",
+                    StrRaw(_, _) => "raw_string",
+                    Str_(_) => "string",
+                    Float(_) => "float",
+                }
+            }
             Lt => "<",
             Ge => ">=",
             ModSep => "::",
@@ -91,6 +99,7 @@ pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
         }
     }
 }
+
 
 #[test]
 fn check() {
