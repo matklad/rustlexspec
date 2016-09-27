@@ -345,17 +345,17 @@ comment */
 /** block /* outter*/ */
 /*! block /* inner */ */
 
-'x'
+'x' 'lifetime
 '\'' '\x20' '\u{007D}' '\n' '\r' '\t' '\0' '\u{a}' //'\u{000aAa}'
 
-// "" "x" "hello" "\"world\""
-// "\"" "\x20" "\u{007D}" "\n" "\r" "\t" "\0" "\u{A}" "\u{AAAaaa}"
+"" "x" "hello" "\"world\""
+"\"" "\x20" "\u{007D}" "\n" "\r" "\t" "\0" "\u{A}" "\u{0a0abc}"
 
-// "multi
-// line"
+"multi
+line"
 
-// " with \
-//  escape"
+" with \
+ escape"
 "###;
 
     let expected = tokenize(text).expect("Failed to parse canonically");
