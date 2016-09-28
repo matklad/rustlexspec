@@ -232,7 +232,7 @@ pub static TOKEN_TYPES: &'static [TokenType] = &[
         "
     "#, None),
     TokenType("raw_byte_string", r##"br\x23*""##, Some(&(raw_string_rule as fn(&str) -> Option<usize>))),
-    TokenType("integer", r"\d+ (\p{XID_Start}\p{XID_Continue}*)?", None),
+    TokenType("integer", r"\d(\d|_)* (\p{XID_Start}\p{XID_Continue}*)?", None),
     TokenType("float", r"
          \d+ ( \.\d+([eE][+-]?\d+)?
              |      ([eE][+-]?\d+) )
@@ -394,6 +394,10 @@ b'x' b' ' b'\t' b'\0' b'\x7F' b'\\' b'\''
 b"x" b" " b"\0" b"\x7F" b"\\" b"Hello WOrld" b"\"\"\""
 br##"hello "# World!"##
 
+// numbers
+
+0 1 1_000_000_000 1i32 1__0i64 _1 1_
+
 // operators
 
 + - * / % ^ & | ! || && << >>
@@ -423,4 +427,3 @@ br##"hello "# World!"##
     }
     assert_eq!(actual.len(), expected.len());
 }
-
