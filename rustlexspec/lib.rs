@@ -11,18 +11,7 @@ extern crate regex;
 
 // Each token consists of a type and a positive length in bytes.
 
-#[derive(Clone, Copy)]
-pub struct Token {
-    pub token_type: TokenType,
-    pub len: usize,
-}
-
-
-impl ::std::fmt::Debug for Token {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        self.token_type.name().fmt(f)
-    }
-}
+type Token = (&'static str, usize);
 
 // The total length of all tokens in the sequence produced by
 // the algorithm is equal to the length of the input. An empty
@@ -40,7 +29,7 @@ pub struct TokenType(
 
 
 impl TokenType {
-    pub fn name(&self) -> &str { self.0 }
+    pub fn name(&self) -> &'static str { self.0 }
     fn re(&self) -> &str { self.1 }
     fn rule(&self) -> Option<&fn(&str) -> Option<usize>> { self.2 }
 }
@@ -73,16 +62,16 @@ pub fn tokenize(input: &str) -> Option<Vec<Token>> {
         let token = match first_token(remaining) {
             Some((t, l)) => {
                 assert!(l > 0, "{}", t.name());
-                Token { token_type: t, len: l }
+                (t.name(), l)
             },
             // 4. If this fails, report error.
             None => return None,
         };
 
-        total_len += token.len;
+        total_len += token.1;
 
         // 5. Advance remaining input.
-        remaining = &remaining[token.len..];
+        remaining = &remaining[token.1..];
 
         // 6. Add the token to the result
         result.push(token);
@@ -309,7 +298,7 @@ fn raw_string_rule(mut input: &str) -> Option<usize> {
 }
 
 // Command line interface
-pub fn driver<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
+pub fn driver<F: Fn(&str) -> Option<Vec<(&'static str, usize)>>>(f: F) {
     use std::io::{self, Read};
 
     let mut buffer = String::new();
@@ -317,14 +306,14 @@ pub fn driver<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
     let tokens = f(&buffer).expect("Invalid rust file");
 
     let mut offset = 0;
-    for token in tokens.iter() {
-        println!("{} {} {:?}", token.token_type.name(), token.len, &buffer[offset..offset + token.len]);
-        offset += token.len;
+    for &(name, len) in tokens.iter() {
+        println!("{} {} {:?}", name, len, &buffer[offset..offset + len]);
+        offset += len;
     }
 }
 
 // Tests
-pub fn check<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
+pub fn check<F: Fn(&str) -> Option<Vec<(&'static str, usize)>>>(f: F) {
     let text = r###"
 // identifiers
 abstract	alignof	as	become	box
@@ -414,16 +403,14 @@ br##"hello "# World!"##
     ));
 
     let mut o = 0;
-    for (&e, &a) in expected.iter().zip(actual.iter()) {
-        let ename = e.token_type.name();
-        let aname = a.token_type.name();
-        if ename != aname || e.len != a.len {
+    for (&(ename, elen), &(aname, alen)) in expected.iter().zip(actual.iter()) {
+        if ename != aname || elen != alen {
             panic!("\nExpected: {} {:?}\n\
                       Actual  : {} {:?}\n",
-                    ename, &text[o..o+e.len],
-                    aname, &text[o..o+a.len]);
+                    ename, &text[o..o+elen],
+                    aname, &text[o..o+alen]);
         }
-        o += e.len;
+        o += elen;
     }
     assert_eq!(actual.len(), expected.len());
 }

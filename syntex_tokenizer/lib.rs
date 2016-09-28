@@ -6,7 +6,7 @@ use syntex_syntax::parse::{lexer, ParseSess};
 use syntex_syntax::parse::lexer::{Reader, TokenAndSpan};
 
 
-pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
+pub fn tokenize(input: &str) -> Option<Vec<(&'static str, usize)>> {
     let sess = ParseSess::new();
     let file_map = sess.codemap().new_filemap("dummy.rs".to_string(), None, input.to_string());
     let handler = sess.span_diagnostic;
@@ -17,19 +17,11 @@ pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
     while !lexer.is_eof() {
         result.push(map_token(lexer.next_token()));
     }
-    result.push(rustlexspec::Token {
-        token_type: by_name("whitespace"),
-        len: 1,
-    });
+    result.push(("whitespace", 1));
 
     return Some(result);
 
-    fn by_name(name: &str) -> rustlexspec::TokenType {
-        *rustlexspec::TOKEN_TYPES.iter().find(|t| t.name() == name)
-            .expect(&format!("No `{}` token", name))
-    }
-
-    fn map_token(t: TokenAndSpan) -> rustlexspec::Token {
+    fn map_token(t: TokenAndSpan) -> (&'static str, usize) {
         use syntex_syntax::parse::token::Token::*;
         use syntex_syntax::parse::token::DelimToken::*;
         let token_name = match t.tok {
@@ -112,10 +104,7 @@ pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
             Whitespace => "whitespace",
             _ => panic!("Unhandled token {:?}", t.tok)
         };
-        rustlexspec::Token {
-            token_type: by_name(token_name),
-            len: t.sp.hi.0 as usize - t.sp.lo.0 as usize,
-        }
+        (token_name, t.sp.hi.0 as usize - t.sp.lo.0 as usize)
     }
 }
 
