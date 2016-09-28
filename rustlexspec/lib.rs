@@ -165,14 +165,16 @@ pub static TOKEN_TYPES: &'static [TokenType] = &[
     TokenType("!", r"!", None),
     TokenType("!=", r"!=", None),
     TokenType("#", r"\x23", None),
+    TokenType("$", r"\$", None),
+    TokenType("%", r"%", None),
+    TokenType("%=", r"%=", None),
     TokenType("&", r"&", None),
+    TokenType("&=", r"&=", None),
     TokenType("&&", r"&&", None),
     TokenType("(", r"\(", None),
     TokenType(")", r"\)", None),
     TokenType("*", r"\*", None),
-    TokenType("/", r"/", None),
-    TokenType("%", r"%", None),
-    TokenType("^", r"\^", None),
+    TokenType("*=", r"\*=", None),
     TokenType("+", r"\+", None),
     TokenType("+=", r"\+=", None),
     TokenType(",", r",", None),
@@ -181,11 +183,15 @@ pub static TOKEN_TYPES: &'static [TokenType] = &[
     TokenType("->", r"->", None),
     TokenType(".", r"\.", None),
     TokenType("..", r"\.\.", None),
+    TokenType("...", r"\.\.\.", None),
+    TokenType("/", r"/", None),
+    TokenType("/=", r"/=", None),
     TokenType(":", r":", None),
     TokenType("::", r"::", None),
     TokenType(";", r";", None),
     TokenType("<", r"<", None),
     TokenType("<<", r"<<", None),
+    TokenType("<<=", r"<<=", None),
     TokenType("<=", r"<=", None),
     TokenType("=", r"=", None),
     TokenType("==", r"==", None),
@@ -193,10 +199,15 @@ pub static TOKEN_TYPES: &'static [TokenType] = &[
     TokenType(">", r">", None),
     TokenType(">=", r">=", None),
     TokenType(">>", r">>", None),
+    TokenType(">>=", r">>=", None),
+    TokenType("@", r"@", None),
     TokenType("[", r"\[", None),
     TokenType("]", r"\]", None),
+    TokenType("^", r"\^", None),
+    TokenType("^=", r"\^=", None),
     TokenType("{", r"\{", None),
     TokenType("|", r"\|", None),
+    TokenType("|=", r"\|=", None),
     TokenType("||", r"\|\|", None),
     TokenType("}", r"\}", None),
     TokenType("char", r"
@@ -315,6 +326,7 @@ pub fn driver<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
 // Tests
 pub fn check<F: Fn(&str) -> Option<Vec<Token>>>(f: F) {
     let text = r###"
+// identifiers
 abstract	alignof	as	become	box
 break	const	continue	crate	do
 else	enum	extern	false	final
@@ -326,6 +338,8 @@ Self	self	sizeof	static	struct
 super	trait	true	type	typeof
 unsafe	unsized	use	virtual	where
 while	yield
+
+self super Self
 
 abstractx	alignofx	axs	becomex	boxx
 break92	const92	continue92	crate92	do92
@@ -340,6 +354,8 @@ unsafe__	unsized__	use__	virtual__	where__
 while__	yield__
 
 _ __ ___ _привет_мир_
+
+// comments
 
 //comment
 // comment
@@ -359,6 +375,8 @@ comment */
 /** block /* outter*/ */
 /*! block /* inner */ */
 
+// character, string and byte literals
+
 'x' 'lifetime
 '\'' ' ' '\t' '\\' '\x20' '\u{007D}' '\n' '\r' '\t' '\0' '\u{a}' '\u{000aAa}'
 
@@ -375,6 +393,15 @@ b'x' b' ' b'\t' b'\0' b'\x7F' b'\\' b'\''
 
 b"x" b" " b"\0" b"\x7F" b"\\" b"Hello WOrld" b"\"\"\""
 br##"hello "# World!"##
+
+// operators
+
++ - * / % ^ & | ! || && << >>
++= -= *= /= %= ^= &= |= &= <<= >>=
+== != < > <= >=
+
+// symbols
+@ $ . .. ... [ ] ( ) { } :: : ; ,
 "###;
 
     let expected = tokenize(text).expect("Failed to parse canonically");

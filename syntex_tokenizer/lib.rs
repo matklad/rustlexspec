@@ -32,21 +32,40 @@ pub fn tokenize(input: &str) -> Option<Vec<rustlexspec::Token>> {
     fn map_token(t: TokenAndSpan) -> rustlexspec::Token {
         use syntex_syntax::parse::token::Token::*;
         use syntex_syntax::parse::token::DelimToken::*;
-        use syntex_syntax::parse::token::BinOpToken::*;
         let token_name = match t.tok {
+            At => "@",
+            Dollar => "$",
             AndAnd => "&&",
-            BinOp(And) => "&",
-            BinOp(Minus) => "-",
-            BinOp(Or) => "|",
-            BinOp(Plus) => "+",
-            BinOp(Shl) => "<<",
-            BinOp(Shr) => ">>",
-            BinOp(Star) => "*",
-            BinOp(Slash) => "/",
-            BinOp(Percent) => "%",
-            BinOp(Caret) => "^",
-            BinOpEq(Minus) => "-=",
-            BinOpEq(Plus) => "+=",
+            BinOp(op) => {
+                use syntex_syntax::parse::token::BinOpToken::*;
+                match op {
+                    And => "&",
+                    Minus => "-",
+                    Or => "|",
+                    Plus => "+",
+                    Shl => "<<",
+                    Shr => ">>",
+                    Star => "*",
+                    Slash => "/",
+                    Percent => "%",
+                    Caret => "^",
+                }
+            }
+            BinOpEq(op) => {
+                use syntex_syntax::parse::token::BinOpToken::*;
+                match op {
+                    And => "&=",
+                    Minus => "-=",
+                    Or => "|=",
+                    Plus => "+=",
+                    Shl => "<<=",
+                    Shr => ">>=",
+                    Star => "*=",
+                    Slash => "/=",
+                    Percent => "%=",
+                    Caret => "^=",
+                }
+            }
             CloseDelim(Brace) => "}",
             CloseDelim(Bracket) => "]",
             CloseDelim(Paren) => ")",
